@@ -1,0 +1,47 @@
+def label = "worker-${UUID.randomUUID().toString()}"
+def buildNum = "${BUILD_NUMBER}"
+def appName = "istio-api-gateway"
+def registry  = "${NCR_REGISTRY}"
+def githubCredential = "github-credential"
+def registryCredential = "ncr-credential" 
+
+podTemplate(label: label, containers: [
+    containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
+    containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true)
+],
+volumes: [
+  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
+]) {
+    node(label) {
+        stage('Clone repository') {
+            container('git') {
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/master']],
+                    userRemoteConfigs: [
+                        [url: 'https://github.com/nhn/solar.mercury.git', credentialsId: "$githubCredential"]
+                    ],
+                ])
+            }
+        }
+        // stage('check current dir') {
+        //     sh 'pwd'
+        //     sh 'ls'
+        // }
+        stage('Build docker image') {
+            container('docker') {
+                withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
+                    sh 'pwd'
+                    sh "ls ./$appName"
+                    sh "docker build -t $registry/$appName:$buildNum -f ./$appName/Dockerfile ."
+                }
+            }
+        }
+         stage('Push docker image') {
+            container('docker') {
+                withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
+                    docker.image("$registry/$appName:$buildNum").push()
+                }
+            }
+        }
+    }
+}

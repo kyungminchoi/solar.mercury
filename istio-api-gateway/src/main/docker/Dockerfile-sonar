@@ -1,0 +1,34 @@
+FROM maven:3.5-jdk-8 as BUILD
+
+ARG sonar_address
+ARG sonar_login
+ARG project_key
+ARG project_version
+
+ENV HOME=/home/usr/app
+
+RUN mkdir -p $HOME
+
+COPY sonar-scanner $HOME/sonar-scanner
+
+WORKDIR $HOME
+
+ADD pom.xml $HOME
+
+RUN mvn verify clean --fail-never
+
+ADD . $HOME
+
+RUN mvn package -DskipTests
+
+RUN $HOME/sonar-scanner/bin/sonar-scanner -e -Dsonar.host.url=$sonar_address -Dsonar.login=$sonar_login -Dsonar.projectKey=$project_key -Dsonar.projectVersion=$project_version -Dsonar.sources=$HOME/src/main/ -Dsonar.tests=$HOME/src/test/ -Dsonar.language=java -Dsonar.java.binaries=$HOME
+
+FROM openjdk:8u131-jdk-alpine
+
+EXPOSE 8080
+
+WORKDIR /usr/local/bin/
+
+COPY --from=BUILD /home/usr/app/target/fleetman-0.0.1-SNAPSHOT.jar webapp.jar
+
+CMD ["java", "-Xmx50m", "-jar","webapp.jar"]
