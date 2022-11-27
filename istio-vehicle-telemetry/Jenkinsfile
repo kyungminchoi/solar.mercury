@@ -1,9 +1,10 @@
 def label = "worker-${UUID.randomUUID().toString()}"
 def buildNum = "${BUILD_NUMBER}"
-def appName = "istio-vehicle-telemetry"
+def appName = "istio-api-gateway"
 def registry  = "${NCR_REGISTRY}"
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
+def githubURL = "${GITHUB_URL}"
 
 podTemplate(label: label, containers: [
     containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
@@ -18,15 +19,11 @@ volumes: [
                 checkout([$class: 'GitSCM',
                     branches: [[name: '*/master']],
                     userRemoteConfigs: [
-                        [url: 'https://github.com/nhn/solar.mercury.git', credentialsId: "$githubCredential"]
+                        [url: "$githubURL", credentialsId: "$githubCredential"]
                     ],
                 ])
             }
         }
-        // stage('check current dir') {
-        //     sh 'pwd'
-        //     sh 'ls'
-        // }
         stage('Build docker image') {
             container('docker') {
                 withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
