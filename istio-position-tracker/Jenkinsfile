@@ -17,7 +17,7 @@ volumes: [
         stage('Clone repository') {
             container('git') {
                 checkout([$class: 'GitSCM',
-                    branches: [[name: '*/master']],
+                    branches: [[name: '*/main']],
                     userRemoteConfigs: [
                         [url: "$githubURL", credentialsId: "$githubCredential"]
                     ],
