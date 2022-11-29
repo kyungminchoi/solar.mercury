@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients
 public class FleetmanApiGateway {
 	public static void main(String[] args) {
-		log.info("!! app log in loki here !!");
 		SpringApplication.run(FleetmanApiGateway.class, args);		
 	}	
 }
