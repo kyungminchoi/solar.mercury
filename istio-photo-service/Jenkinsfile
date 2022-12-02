@@ -1,6 +1,6 @@
 def label = "worker-${UUID.randomUUID().toString()}"
 def buildNum = "${BUILD_NUMBER}"
-def appName = "istio-api-gateway"
+def appName = "istio-photo-service"
 def registry  = "${NCR_REGISTRY}"
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
