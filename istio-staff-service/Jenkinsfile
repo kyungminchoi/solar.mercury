@@ -1,7 +1,12 @@
 def label = "worker-${UUID.randomUUID().toString()}"
 def buildNum = "${BUILD_NUMBER}"
+<<<<<<< HEAD
 def appName = "istio-api-gateway"
 def registry  = "${MY_NCR_URL}"
+=======
+def appName = "istio-staff-service"
+def registry  = "${NCR_REGISTRY}"
+>>>>>>> f5099f130c1b733e83d973370205b37dce44a078
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
 def githubURL = "${MY_MERCURY_REPO_URL}"
