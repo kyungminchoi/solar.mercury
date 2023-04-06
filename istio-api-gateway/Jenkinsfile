@@ -28,8 +28,8 @@ volumes: [
         }
         stage('Build docker image') {
             container('kaniko') {
-                echo "{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}" > /kaniko/.docker/config.json
-                sh 'cat /kaniko/.docker/config.json'
+                sh "echo '{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}' > /kaniko/.docker/config.json"
+                sh "cat /kaniko/.docker/config.json"
                 sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
             }
         }
