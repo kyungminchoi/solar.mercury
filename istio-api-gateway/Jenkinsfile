@@ -11,7 +11,7 @@ podTemplate(label: label, containers: [
     containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
-  secretVolume(secretName: 'regcred', mountPath: '/root/.docker'),
+  secretVolume(secretName: 'regcred', mountPath: '/kaniko/.docker'),
   hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
 ]) {
     node(label) {
