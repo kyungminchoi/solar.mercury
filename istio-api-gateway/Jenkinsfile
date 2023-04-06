@@ -29,7 +29,7 @@ volumes: [
                 // withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
                     sh 'pwd'
                     sh "ls ./$appName"
-                    sh "/kaniko/executor -f `pwd`./$appName/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=$registry/$appName:$buildNum"
+                    sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
                     // sh "docker build -t $registry/$appName:$buildNum -f ./$appName/Dockerfile ."
                 // }
             }
