@@ -2,6 +2,8 @@ def label = "worker-${UUID.randomUUID().toString()}"
 def buildNum = "${BUILD_NUMBER}"
 def appName = "istio-api-gateway"
 def registry  = "${MY_NCR_URL}"
+def userAccessKey  = "${MY_USER_ACCESS_KEY}"
+def secretAccessKey  = "${MY_USER_SECRET_KEY}"
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
 def githubURL = "${MY_MERCURY_REPO_URL}"
@@ -11,7 +13,6 @@ podTemplate(label: label, containers: [
     containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
-  secretVolume(secretName: 'regcred', mountPath: '/kaniko/.docker/'),
   hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
 ]) {
     node(label) {
@@ -27,7 +28,7 @@ volumes: [
         }
         stage('Build docker image') {
             container('kaniko') {
-                    sh "ls /kaniko/.docker"
+                    echo "{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}" > /kaniko/.docker/config.json
                     sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"     
             }
         }
