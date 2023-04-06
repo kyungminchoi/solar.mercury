@@ -8,10 +8,10 @@ def githubURL = "${MY_MERCURY_REPO_URL}"
 
 podTemplate(label: label, containers: [
     containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true)
+    containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
-  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
+  hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
 ]) {
     node(label) {
         stage('Clone repository') {
@@ -25,20 +25,21 @@ volumes: [
             }
         }
         stage('Build docker image') {
-            container('docker') {
+            container('kaniko') {
                 withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
                     sh 'pwd'
                     sh "ls ./$appName"
-                    sh "docker build -t $registry/$appName:$buildNum -f ./$appName/Dockerfile ."
+                    sh "/kaniko/executor -f `pwd`./$appName/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=$registry/$appName:$buildNum"
+                    // sh "docker build -t $registry/$appName:$buildNum -f ./$appName/Dockerfile ."
                 }
             }
         }
-         stage('Push docker image') {
-            container('docker') {
-                withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
-                    docker.image("$registry/$appName:$buildNum").push()
-                }
-            }
-        }
+        //  stage('Push docker image') {
+        //     container('docker') {
+        //         withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
+        //             docker.image("$registry/$appName:$buildNum").push()
+        //         }
+        //     }
+        // }
     }
 }
