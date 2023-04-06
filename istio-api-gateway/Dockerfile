@@ -1,5 +1,8 @@
 FROM maven:3.5-jdk-8 as BUILD
 
+RUN pwd
+RUN ls
+
 ENV HOME=/home/usr/app
 
 RUN mkdir -p $HOME
