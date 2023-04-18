@@ -30,7 +30,8 @@ volumes: [
             container('kaniko') {
                 sh "echo '{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}' > /kaniko/.docker/config.json"
                 sh "cat /kaniko/.docker/config.json"
-                sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
+                // sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
+                sh "--context=$githubURL --destination=$registry/$appName:$buildNum --dockerfile=Dockerfile"
             }
         }
     }
