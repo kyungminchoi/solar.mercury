@@ -31,7 +31,7 @@ volumes: [
                 sh "echo '{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}' > /kaniko/.docker/config.json"
                 sh "cat /kaniko/.docker/config.json"
                 // sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
-                sh "--context git://$githubURL#refs/heads/master --context-sub-path=istio-api-gateway/ --destination=$registry/$appName:$buildNum --dockerfile=Dockerfile"
+                sh "GIT_USERNAME=kyungminchoi GIT_PASSWORD=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 /kaniko/executor --context git://$githubURL#refs/heads/master --context-sub-path=istio-api-gateway/ --destination=$registry/$appName:$buildNum --dockerfile=Dockerfile"
             }
         }
     }
