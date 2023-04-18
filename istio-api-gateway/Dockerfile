@@ -9,7 +9,7 @@ RUN mkdir -p $HOME
 
 WORKDIR $HOME
 
-ADD ./pom.xml $HOME
+ADD ./istio-api-gateway/pom.xml $HOME
 
 RUN mvn verify clean --fail-never
 
