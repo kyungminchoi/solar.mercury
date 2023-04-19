@@ -11,12 +11,6 @@ def githubURL = "${MY_MERCURY_REPO_URL}"
 podTemplate(label: label, containers: [
     containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
     containerTemplate(name: 'podman', image: 'docker.io/mysticrenji/podman', command: 'cat', ttyEnabled: true)
-],
-volumes: [
-  hostPathVolume(mountPath: '/var/lib/containers', hostPath: '{}'),
-  hostPathVolume(mountPath: '/dev/shm', hostPath: '{}'),
-  hostPathVolume(mountPath: '/var/run', hostPath: '{}'),
-  hostPathVolume(mountPath: '/tmp', hostPath: '{}')
 ]) {
     node(label) {
         stage('Clone repository') {
