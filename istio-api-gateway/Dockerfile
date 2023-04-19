@@ -1,8 +1,5 @@
 FROM maven:3.5-jdk-8 as BUILD
 
-RUN pwd
-RUN ls
-
 ENV HOME=/home/usr/app
 
 RUN mkdir -p $HOME
@@ -24,7 +21,5 @@ EXPOSE 8080
 WORKDIR /usr/local/bin/
 
 COPY --from=BUILD /home/usr/app/target/fleetman-0.0.1-SNAPSHOT.jar webapp.jar
-
-RUN apt-get install -y docker-ce-cli
 
 CMD ["java", "-Xmx50m", "-jar","webapp.jar"]
