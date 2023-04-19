@@ -7,7 +7,7 @@ def secretAccessKey  = "${MY_USER_SECRET_KEY}"
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
 def githubURL = "${MY_MERCURY_REPO_URL}"
-podTemplate(yaml: '''
+podTemplate(yaml: """
               kind: Pod
               metadata:
                 name: kaniko-image-build-pod
@@ -31,32 +31,20 @@ podTemplate(yaml: '''
                         items:
                         - key: .dockerconfigjson
                           path: config.json
-'''
+"""
   ) {
 
   node(POD_LABEL) {
     stage('Build with Kaniko') {
-
-      //git tag를 가져오기 위한 clone 
-      git branch: 'master',
-        credentialsId: 'github-credential',
-        url: 'https://github.com/kyungminchoi/solar.mercury.git'
-
-      script(){
-          GIT_TAG = sh (
-            script: 'git describe --always',
-            returnStdout: true
-          ).trim()
-      }
-			//Image build 
+	  //Image build 
       container('kaniko') {
         //kaniko 에서 빌드하기 위해 소스코드 clone
-        git branch: 'main',
+        git branch: 'master',
           credentialsId: 'github-credential',
-          url: 'https://github.com/kyungminchoi/solar.mercury.git'
+          url: "$githubURL"
         
         // kaniko 실행
-        sh '/kaniko/executor -f `pwd`/istio-api-gateway/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=c553e74a-kr2-registry.container.nhncloud.com/ncr/istio-api-gateway:' + GIT_TAG
+        sh "/kaniko/executor -f `pwd`/$appName/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=$registry/$appName:$buildNum" 
       }
 
     }
