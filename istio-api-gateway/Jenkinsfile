@@ -10,7 +10,6 @@ def githubURL = "${MY_MERCURY_REPO_URL}"
 
 podTemplate(label: label, containers: [
     containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'buildkit', image: 'moby/buildkit:master', ttyEnabled: true, privileged: true),
     containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
