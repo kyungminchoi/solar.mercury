@@ -13,6 +13,7 @@ podTemplate(label: label, containers: [
     containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
+  secretVolume(secretName: 'kaniko-secret', secretName: '/secret/kaniko-secret.json'),
   hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
 ]) {
     node(label) {
@@ -28,10 +29,9 @@ volumes: [
         }
         stage('Build docker image') {
             container('kaniko') {
-                sh "echo '{\"auths\":{\"$registry\":{\"username\":\"$userAccessKey\",\"password\":\"$secretAccessKey\"}}}' > /kaniko/.docker/config.json"
-                sh "cat /kaniko/.docker/config.json"
-                // sh "/kaniko/executor -f ./$appName/Dockerfile --insecure --skip-tls-verify --cache=true -d $registry/$appName:$buildNum"
-                sh "GIT_USERNAME=kyungminchoi GIT_PASSWORD=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 /kaniko/executor --context git://$githubURL#refs/heads/master --context-sub-path=istio-api-gateway/ --destination=$registry/$appName:$buildNum --dockerfile=Dockerfile"
+                sh "podman login --tls-verify=false -u $userAccessKey -p $secretAccessKey $registry"
+                sh "podman build --tls-verify=false --squash -t $registry/istio-api-gateway -f ./Dockerfile"
+                sh "podman push --tls-verify=false $registry/istio-api-gateway"
             }
         }
     }
