@@ -13,7 +13,6 @@ podTemplate(label: label, containers: [
     containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
 ],
 volumes: [
-  secretVolume(secretName: 'kaniko-secret', secretName: '/secret/kaniko-secret.json'),
   hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
 ]) {
     node(label) {
@@ -25,14 +24,17 @@ volumes: [
                         [url: "$githubURL", credentialsId: "$githubCredential"]
                     ],
                 ])
-            }
-        }
-        stage('Build docker image') {
-            container('kaniko') {
                 sh "podman login --tls-verify=false -u $userAccessKey -p $secretAccessKey $registry"
                 sh "podman build --tls-verify=false --squash -t $registry/istio-api-gateway -f ./Dockerfile"
                 sh "podman push --tls-verify=false $registry/istio-api-gateway"
             }
         }
+        // stage('Build docker image') {
+        //     container('kaniko') {
+        //         sh "podman login --tls-verify=false -u $userAccessKey -p $secretAccessKey $registry"
+        //         sh "podman build --tls-verify=false --squash -t $registry/istio-api-gateway -f ./Dockerfile"
+        //         sh "podman push --tls-verify=false $registry/istio-api-gateway"
+        //     }
+        // }
     }
 }
