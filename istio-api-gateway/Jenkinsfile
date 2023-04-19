@@ -10,10 +10,13 @@ def githubURL = "${MY_MERCURY_REPO_URL}"
 
 podTemplate(label: label, containers: [
     containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'kaniko', image: 'gcr.io/kaniko-project/executor:v1.6.0-debug', command: 'sleep', args: '99d',ttyEnabled: true)
+    containerTemplate(name: 'podman', image: 'docker.io/mysticrenji/podman', command: 'cat', ttyEnabled: true)
 ],
 volumes: [
-  hostPathVolume(mountPath: '/kaniko/.docker', hostPath: '/kaniko/.docker')
+  hostPathVolume(mountPath: '/var/lib/containers', hostPath: '{}'),
+  hostPathVolume(mountPath: '/dev/shm', hostPath: '{}'),
+  hostPathVolume(mountPath: '/var/run', hostPath: '{}'),
+  hostPathVolume(mountPath: '/tmp', hostPath: '{}')
 ]) {
     node(label) {
         stage('Clone repository') {
@@ -24,17 +27,14 @@ volumes: [
                         [url: "$githubURL", credentialsId: "$githubCredential"]
                     ],
                 ])
+            }
+        }
+        stage('Build docker image') {
+            container('podman') {
                 sh "podman login --tls-verify=false -u $userAccessKey -p $secretAccessKey $registry"
                 sh "podman build --tls-verify=false --squash -t $registry/istio-api-gateway -f ./Dockerfile"
                 sh "podman push --tls-verify=false $registry/istio-api-gateway"
             }
         }
-        // stage('Build docker image') {
-        //     container('kaniko') {
-        //         sh "podman login --tls-verify=false -u $userAccessKey -p $secretAccessKey $registry"
-        //         sh "podman build --tls-verify=false --squash -t $registry/istio-api-gateway -f ./Dockerfile"
-        //         sh "podman push --tls-verify=false $registry/istio-api-gateway"
-        //     }
-        // }
     }
 }
