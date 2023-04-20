@@ -1,44 +1,51 @@
 def label = "worker-${UUID.randomUUID().toString()}"
 def buildNum = "${BUILD_NUMBER}"
-def registry  = "${MY_NCR_URL}"
 def appName = "istio-vehicle-telemetry"
+def registry  = "${MY_NCR_URL}"
 def githubCredential = "github-credential"
 def registryCredential = "ncr-credential" 
 def githubURL = "${MY_MERCURY_REPO_URL}"
+podTemplate(yaml: """
+              kind: Pod
+              metadata:
+                name: kaniko-image-build-pod
+              spec:
+                containers:
+                - name: kaniko
+                  image: gcr.io/kaniko-project/executor:v1.6.0-debug
+                  imagePullPolicy: Always
+                  command:
+                  - sleep
+                  args:
+                  - 99d
+                  volumeMounts:
+                    - name: docker-config
+                      mountPath: /kaniko/.docker
+                  tty: true
+                volumes:
+                    - name: docker-config
+                      secret:
+                        secretName: regcred
+                        items:
+                        - key: .dockerconfigjson
+                          path: config.json
+"""
+  ) {
 
-podTemplate(label: label, containers: [
-    containerTemplate(name: 'git', image: 'alpine/git', command: 'cat', ttyEnabled: true),
-    containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true)
-],
-volumes: [
-  hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
-]) {
-    node(label) {
-        stage('Clone repository') {
-            container('git') {
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/master']],
-                    userRemoteConfigs: [
-                        [url: "$githubURL", credentialsId: "$githubCredential"]
-                    ],
-                ])
-            }
-        }
-        stage('Build docker image') {
-            container('docker') {
-                withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
-                    sh 'pwd'
-                    sh "ls ./$appName"
-                    sh "docker build -t $registry/$appName:$buildNum -f ./$appName/Dockerfile ."
-                }
-            }
-        }
-         stage('Push docker image') {
-            container('docker') {
-                withDockerRegistry([ credentialsId: "$registryCredential", url: "http://$registry" ]) {
-                    docker.image("$registry/$appName:$buildNum").push()
-                }
-            }
-        }
+  node(POD_LABEL) {
+    stage('Build with Kaniko') {
+	  //Image build 
+      container('kaniko') {
+        //kaniko 에서 빌드하기 위해 소스코드 clone
+        git branch: 'master',
+          credentialsId: 'github-credential',
+          url: "$githubURL"
+        
+        // kaniko 실행
+        sh "/kaniko/executor -f `pwd`/$appName/Dockerfile -c `pwd` --insecure --skip-tls-verify --cache=true --destination=$registry/$appName:$buildNum" 
+      }
+
     }
+  }
 }
+
